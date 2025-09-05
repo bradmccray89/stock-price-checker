@@ -23,7 +23,9 @@ export default function SignInPage() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session) {
         router.push('/stocks');
       } else {
@@ -33,7 +35,9 @@ export default function SignInPage() {
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
         router.push('/stocks');
       }
@@ -84,8 +88,8 @@ export default function SignInPage() {
 
   if (isCheckingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='text-lg'>Loading...</div>
       </div>
     );
   }
@@ -120,7 +124,6 @@ export default function SignInPage() {
                 value={form.email}
                 onChange={onChange}
                 className='block w-full rounded-lg border border-slate-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm shadow-sm placeholder:text-slate-400 dark:placeholder:text-neutral-500'
-                placeholder='you@example.com'
               />
               {errors.email && (
                 <p className='mt-1 text-xs text-red-600'>{errors.email}</p>
@@ -140,7 +143,6 @@ export default function SignInPage() {
                 value={form.password}
                 onChange={onChange}
                 className='block w-full rounded-lg border border-slate-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm shadow-sm placeholder:text-slate-400 dark:placeholder:text-neutral-500'
-                placeholder='••••••••'
               />
               {errors.password && (
                 <p className='mt-1 text-xs text-red-600'>{errors.password}</p>
