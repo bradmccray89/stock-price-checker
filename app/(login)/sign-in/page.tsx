@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { z } from 'zod';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 
 const SignInSchema = z.object({
@@ -11,12 +12,35 @@ const SignInSchema = z.object({
 });
 
 export default function SignInPage() {
+  const router = useRouter();
   const [form, setForm] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<
     'idle' | 'submitting' | 'success' | 'error'
   >('idle');
   const [info, setInfo] = useState<string | null>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        router.push('/stocks');
+      } else {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        router.push('/stocks');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [router]);
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -40,20 +64,30 @@ export default function SignInPage() {
       return;
     }
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: form.email,
         password: form.password,
       });
       if (error) throw error;
+
+      await supabase.auth.getSession();
+
       setStatus('success');
-      setInfo(`Signed in as ${data.user?.email}`);
-      // TODO: redirect to protected page after short delay
+      router.push('/stocks');
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Failed to sign in. Try again.';
       setStatus('error');
       setErrors({ form: message });
     }
+  }
+
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
   }
 
   return (

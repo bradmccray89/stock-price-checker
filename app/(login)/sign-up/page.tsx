@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { z } from 'zod';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 
 const SignUpSchema = z
@@ -18,6 +19,7 @@ const SignUpSchema = z
   });
 
 export default function SignUpPage() {
+  const router = useRouter();
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -29,6 +31,28 @@ export default function SignUpPage() {
     'idle' | 'submitting' | 'success' | 'error'
   >('idle');
   const [info, setInfo] = useState<string | null>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        router.push('/stocks');
+      } else {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        router.push('/stocks');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [router]);
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -71,11 +95,30 @@ export default function SignUpPage() {
         setInfo('Check your email to confirm your account.');
       }
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to sign up. Try again.';
+      console.error('Sign up error:', err);
+      let message = 'Failed to sign up. Try again.';
+      
+      if (err instanceof Error) {
+        if (err.message.includes('fetch')) {
+          message = 'Network error. Please check your internet connection and try again.';
+        } else if (err.message.includes('User already registered')) {
+          message = 'This email is already registered. Try signing in instead.';
+        } else {
+          message = err.message;
+        }
+      }
+      
       setStatus('error');
       setErrors({ form: message });
     }
+  }
+
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
   }
 
   return (
