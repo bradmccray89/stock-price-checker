@@ -22,7 +22,9 @@ export default function StocksPage() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         router.push('/sign-in');
       } else {
@@ -32,7 +34,9 @@ export default function StocksPage() {
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT' || !session) {
         router.push('/sign-in');
       } else {
@@ -80,8 +84,8 @@ export default function StocksPage() {
 
   if (isAuthenticated === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='text-lg'>Loading...</div>
       </div>
     );
   }
@@ -95,9 +99,7 @@ export default function StocksPage() {
           Sign Out
         </button>
       </header>
-      <h1 className='text-4xl font-bold bg-gradient-to-r from-purple-500 to-sky-500 bg-clip-text text-transparent'>
-        Stock Prices
-      </h1>
+      <h1 className='text-4xl font-bold'>Stock Prices</h1>
       <p className='text-lg mb-8'>
         Here you can check the stock prices for your favorite companies.
       </p>
